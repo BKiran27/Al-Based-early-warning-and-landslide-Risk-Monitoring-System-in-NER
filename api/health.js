@@ -1,0 +1,1 @@
+export default function handler(req, res) { res.setHeader("status", "200"); res.json({ status: "HEALTHY", system: "Ai-Based Early Warning and Landslide Risk Monitoring System in NER", version: "2.4.0" }); }

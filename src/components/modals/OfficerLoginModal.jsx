@@ -1,0 +1,184 @@
+import React, { useState } from 'react';
+import { Shield, Lock, KeyRound, X, CheckCircle } from 'lucide-react';
+import { translations } from '../../data/translations';
+
+export const OfficerLoginModal = ({
+  isOpen,
+  onClose,
+  onLoginSuccess,
+  lang
+}) => {
+  const t = translations[lang] || translations.en;
+
+  const [username, setUsername] = useState('sih_officer_ner');
+  const [password, setPassword] = useState('sih2026_password');
+  const [errorMsg, setErrorMsg] = useState('');
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
+
+  if (!isOpen) return null;
+
+  const handleLogin = (e) => {
+    e.preventDefault();
+    setIsAuthenticating(true);
+    setErrorMsg('');
+
+    setTimeout(() => {
+      if (username === 'sih_officer_ner' && password === 'sih2026_password') {
+        onLoginSuccess({
+          username: 'sih_officer_ner',
+          name: 'Major Arvind Sharma',
+          badge: 'NDRF-NER-884',
+          role: 'FIELD_DISASTER_COMMANDER',
+        });
+        setIsAuthenticating(false);
+        onClose();
+      } else {
+        // Allow any input for demonstration
+        onLoginSuccess({
+          username,
+          name: username,
+          badge: 'OFFICER-NER-ID',
+          role: 'DISASTER_OFFICER',
+        });
+        setIsAuthenticating(false);
+        onClose();
+      }
+    }, 400);
+  };
+
+  const handleFastPass = (officer) => {
+    onLoginSuccess(officer);
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 z-[5000] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-150">
+      <div className="w-full max-w-md bg-[#0c1322] border border-slate-800 rounded-2xl p-6 shadow-2xl shadow-black/80 ring-1 ring-slate-700/30 space-y-4 relative z-[5001]">
+        {/* Header */}
+        <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+          <div className="flex items-center space-x-2.5">
+            <div className="p-2 rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-400">
+              <Shield className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-white tracking-wide">
+                {t.officerLogin}
+              </h3>
+              <p className="text-[10px] text-slate-400 font-mono">
+                NDRF / SDRF Incident Command Verification
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/80 transition"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Credentials Form */}
+        <form onSubmit={handleLogin} className="space-y-3">
+          <div>
+            <label className="text-[11px] text-slate-300 font-semibold tracking-wide">
+              Officer ID / Badge Code
+            </label>
+            <div className="flex items-center bg-[#080d1a] border border-slate-700/80 rounded-xl px-3 py-2.5 mt-1 focus-within:border-sky-500 focus-within:ring-1 focus-within:ring-sky-500/50 transition">
+              <KeyRound className="w-4 h-4 text-slate-400 mr-2 shrink-0" />
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="bg-transparent text-xs text-white font-mono focus:outline-none w-full placeholder-slate-500"
+                placeholder="e.g. sih_officer_ner"
+                required
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="text-[11px] text-slate-300 font-semibold tracking-wide">
+              Security PIN / Password
+            </label>
+            <div className="flex items-center bg-[#080d1a] border border-slate-700/80 rounded-xl px-3 py-2.5 mt-1 focus-within:border-sky-500 focus-within:ring-1 focus-within:ring-sky-500/50 transition">
+              <Lock className="w-4 h-4 text-slate-400 mr-2 shrink-0" />
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="bg-transparent text-xs text-white font-mono focus:outline-none w-full placeholder-slate-500"
+                placeholder="Enter password"
+                required
+              />
+            </div>
+          </div>
+
+          {errorMsg && (
+            <div className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-xs text-rose-400 font-medium">
+              {errorMsg}
+            </div>
+          )}
+
+          <div className="pt-2">
+            <button
+              type="submit"
+              disabled={isAuthenticating}
+              className="w-full py-2.5 bg-sky-600 hover:bg-sky-500 disabled:opacity-50 text-white rounded-xl text-xs font-bold transition flex items-center justify-center space-x-2 shadow-lg shadow-sky-600/20 active:scale-[0.99]"
+            >
+              <Shield className="w-4 h-4" />
+              <span>{isAuthenticating ? 'Authenticating Authority...' : 'Authorize Emergency Access'}</span>
+            </button>
+          </div>
+        </form>
+
+        {/* 1-Click Fast Pass for Jury Demo */}
+        <div className="pt-3 border-t border-slate-800 space-y-2">
+          <div className="flex items-center justify-between text-[11px]">
+            <span className="text-slate-400 font-medium">Jury Evaluation Profiles:</span>
+            <span className="text-[10px] text-sky-400 font-mono font-semibold">1-Click Fast Pass</span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => handleFastPass({
+                username: "sih_officer_ner",
+                name: "Major Arvind Sharma",
+                badge: "NDRF-NER-884",
+                role: "FIELD_DISASTER_COMMANDER"
+              })}
+              className="p-2.5 bg-[#080d1a] hover:bg-slate-800/90 text-emerald-300 hover:text-white border border-emerald-500/20 hover:border-emerald-500/50 rounded-xl text-[11px] font-bold text-left transition flex flex-col gap-0.5 group"
+            >
+              <div className="flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                <span className="font-semibold text-slate-200 group-hover:text-white">Major A. Sharma</span>
+              </div>
+              <span className="text-[10px] text-slate-400 font-mono pl-3">NDRF Battalion 1</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleFastPass({
+                username: "sdrf_lepcha",
+                name: "Inspector T. Lepcha",
+                badge: "SDRF-SK-102",
+                role: "SDRF_INSPECTOR"
+              })}
+              className="p-2.5 bg-[#080d1a] hover:bg-slate-800/90 text-sky-300 hover:text-white border border-sky-500/20 hover:border-sky-500/50 rounded-xl text-[11px] font-bold text-left transition flex flex-col gap-0.5 group"
+            >
+              <div className="flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-sky-400" />
+                <span className="font-semibold text-slate-200 group-hover:text-white">Insp. T. Lepcha</span>
+              </div>
+              <span className="text-[10px] text-slate-400 font-mono pl-3">SDRF Sikkim Quick Unit</span>
+            </button>
+          </div>
+
+          <p className="text-[10px] text-slate-500 text-center font-mono pt-1">
+            Manual Credentials: <span className="text-slate-400">sih_officer_ner</span> / <span className="text-slate-400">sih2026_password</span>
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};

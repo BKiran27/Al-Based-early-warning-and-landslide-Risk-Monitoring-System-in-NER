@@ -1,0 +1,13 @@
+node_modules/
+dist/
+build/
+*.log
+.env
+*.local
+cloudflared.exe
+*.exe
+.vercel/
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
