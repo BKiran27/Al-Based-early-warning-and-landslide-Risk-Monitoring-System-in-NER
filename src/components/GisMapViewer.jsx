@@ -12,11 +12,13 @@ import {
   TriangleAlert, 
   Check, 
   X, 
-  Cpu
+  Cpu,
+  Radio
 } from 'lucide-react';
 import { translations } from '../data/translations';
 import { hazardZones } from '../data/hazardZones';
 import { roadCorridors } from '../data/roadCorridors';
+import { indigenousSensorNodes } from '../data/nitiSensorNodes';
 import { playEmergencySiren } from '../services/audio';
 
 export const GisMapViewer = ({
@@ -315,11 +317,91 @@ export const GisMapViewer = ({
       }
     });
 
+    // 4. Populate NITI Aayog & IIT Mandi Indigenous Sensor Nodes (64 Nodes)
+    const nitiSensorsGroup = L.layerGroup();
+    indigenousSensorNodes.forEach((node) => {
+      const isDanger = node.status === 'COLLAPSE_IMMINTENT';
+      const isWarning = node.status === 'WARNING';
+      const nodeColor = isDanger ? '#f43f5e' : isWarning ? '#f59e0b' : '#38bdf8';
+
+      const customIcon = L.divIcon({
+        className: 'niti-sensor-node-icon',
+        html: `
+          <div style="position:relative;width:28px;height:28px;border-radius:50%;background:#060b14;border:2px solid ${nodeColor};display:flex;align-items:center;justify-content:center;box-shadow:0 0 12px ${nodeColor}80;cursor:pointer;">
+            <span style="font-size:12px;">📡</span>
+            ${isDanger ? `<div style="position:absolute;inset:-4px;border-radius:50%;border:2px solid #f43f5e;animation:ping 1.5s cubic-bezier(0,0,0.2,1) infinite;"></div>` : ''}
+          </div>
+        `,
+        iconSize: [28, 28],
+        iconAnchor: [14, 14],
+      });
+
+      const marker = L.marker([node.lat, node.lon], { icon: customIcon });
+
+      const popupHtml = `
+        <div style="min-width: 250px; font-family: 'Plus Jakarta Sans', sans-serif; color: #f8fafc; background: #0c1322; padding: 12px; border-radius: 12px; border: 1px solid ${nodeColor}60;">
+          <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #1e293b; padding-bottom: 6px; margin-bottom: 6px;">
+            <span style="font-family: monospace; font-size: 11px; font-weight: bold; color: ${nodeColor};">${node.id}</span>
+            <span style="font-size: 9px; font-weight: bold; background: ${nodeColor}25; color: ${nodeColor}; border: 1px solid ${nodeColor}50; padding: 2px 6px; border-radius: 4px;">
+              ${node.status}
+            </span>
+          </div>
+          <b style="font-size: 12px; color: #ffffff; display: block;">${node.name}</b>
+          <div style="font-size: 10px; color: #94a3b8; margin-top: 2px;">📍 ${node.corridor} (${node.district}, ${node.state})</div>
+          
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 8px 0; background: #00000050; padding: 6px; border-radius: 6px; font-family: monospace; font-size: 10px;">
+            <div>1.5m Moisture: <b style="color: ${node.moisture1_5m_pct >= 75 ? '#f43f5e' : '#38bdf8'};">${node.moisture1_5m_pct}%</b></div>
+            <div>Tilt (Δθ): <b style="color: ${node.tiltAngle_deg >= 3.2 ? '#f43f5e' : '#f59e0b'};">${node.tiltAngle_deg}°</b></div>
+            <div>Advance Lead: <b style="color: #34d399;">${node.leadTimeHours}</b></div>
+            <div>Solar Battery: <b style="color: #cbd5e1;">${node.battery_v}V</b></div>
+          </div>
+          
+          <div style="font-size: 10px; color: #cbd5e1; font-style: italic; border-top: 1px solid #1e293b; padding-top: 6px;">
+            "${node.advisory}"
+          </div>
+        </div>
+      `;
+
+      marker.bindPopup(popupHtml, { maxWidth: 300, className: 'ner-risk-popup' });
+
+      marker.on('click', () => {
+        const item = {
+          id: node.id,
+          name: node.name,
+          district: `${node.corridor} (${node.district})`,
+          state: node.state,
+          slope: +(node.tiltAngle_deg * 12.2).toFixed(1),
+          rain48: +(node.moisture1_5m_pct * 3.1).toFixed(1),
+          soil: node.moisture1_5m_pct,
+          intensity: isDanger ? 0.96 : (isWarning ? 0.74 : 0.32),
+          tier: isDanger ? 'SEVERE' : (isWarning ? 'HIGH' : 'LOW'),
+          insar: -(node.tiltAngle_deg * 9.2).toFixed(1),
+          isCitizenReport: false,
+          isNitiNode: true,
+          rawNitiNode: node,
+          suggestedAction: node.advisory,
+          exp_hi: `IIT Mandi / NITI Aayog नोड ${node.id}: 1.5m गहराई पर नमी ${node.moisture1_5m_pct}% व टिल्ट कोण ${node.tiltAngle_deg}°। अग्रिम चेतावनी अवधि: ${node.leadTimeHours}।`,
+          exp_en: `IIT Mandi / NITI Aayog Sensor Node ${node.id}: 1.5m Subsurface moisture ${node.moisture1_5m_pct}% & tilt ${node.tiltAngle_deg}°. Advance Warning Window: ${node.leadTimeHours} lead time with >90% accuracy.`,
+          aiContributions: [
+            { name: "Subsurface Moisture (1.5m)", pct: 45, color: "#38bdf8", gradient: "from-sky-500 to-blue-500" },
+            { name: "MEMS Inclinometer Tilt", pct: 30, color: "#f59e0b", gradient: "from-amber-500 to-orange-500" },
+            { name: "Surface Infiltration", pct: 15, color: "#60a5fa", gradient: "from-blue-500 to-indigo-500" },
+            { name: "Solar Battery & Telemetry", pct: 10, color: "#10b981", gradient: "from-emerald-500 to-teal-500" }
+          ]
+        };
+        setSelectedItem(item);
+        if (onSelectFeature) onSelectFeature(item);
+      });
+
+      nitiSensorsGroup.addLayer(marker);
+    });
+
     layerGroupsRef.current = {
       heatmap: heatmapGroup,
       polygons: polygonsGroup,
       roads: roadsGroup,
       citizens: citizensGroup,
+      nitiSensors: nitiSensorsGroup,
     };
 
     // Default layer: heatmap
@@ -429,12 +511,13 @@ export const GisMapViewer = ({
     }
 
     const map = mapInstanceRef.current;
-    const { heatmap, polygons, roads, citizens } = layerGroupsRef.current;
+    const { heatmap, polygons, roads, citizens, nitiSensors } = layerGroupsRef.current;
 
     if (heatmap) map.removeLayer(heatmap);
     if (polygons) map.removeLayer(polygons);
     if (roads) map.removeLayer(roads);
     if (citizens) map.removeLayer(citizens);
+    if (nitiSensors) map.removeLayer(nitiSensors);
 
     if (activeLayer === 'heatmap' && heatmap) {
       heatmap.addTo(map);
@@ -448,6 +531,9 @@ export const GisMapViewer = ({
     } else if (activeLayer === 'citizens' && citizens) {
       citizens.addTo(map);
       map.flyTo([26.2, 91.5], 7.2, { duration: 1 });
+    } else if (activeLayer === 'nitiSensors' && nitiSensors) {
+      nitiSensors.addTo(map);
+      map.flyTo([25.8, 92.4], 7, { duration: 1 });
     }
   }, [activeLayer]);
 
@@ -626,6 +712,17 @@ export const GisMapViewer = ({
               <Camera className="w-3 h-3" />
               <span>{t.layerCitizenReports} ({citizenReports.length})</span>
             </button>
+            <button
+              onClick={() => setActiveLayer('nitiSensors')}
+              className={`px-3 py-1 rounded-lg transition-all text-xs font-bold flex items-center gap-1.5 ${
+                activeLayer === 'nitiSensors'
+                  ? 'bg-cyan-600 text-white shadow-sm shadow-cyan-600/40'
+                  : 'text-cyan-400 hover:text-cyan-300 hover:bg-cyan-950/40'
+              }`}
+            >
+              <Radio className="w-3 h-3" />
+              <span>NITI / IIT Mandi Mesh ({indigenousSensorNodes.length})</span>
+            </button>
           </div>
 
           {/* Base Map Switcher Pill */}
@@ -733,6 +830,10 @@ export const GisMapViewer = ({
                   <span className="text-[10px] bg-rose-500/15 text-rose-300 font-bold px-2 py-0.5 rounded border border-rose-500/30">
                     📷 GROUND OBS
                   </span>
+                ) : currentItem.isNitiNode ? (
+                  <span className="text-[10px] bg-cyan-500/20 text-cyan-300 font-mono font-bold px-2 py-0.5 rounded border border-cyan-500/40 flex items-center gap-1">
+                    <Radio className="w-3 h-3" /> NITI / IIT MANDI SENSOR NODE
+                  </span>
                 ) : (
                   <span className="text-[10px] bg-sky-500/15 text-sky-300 font-mono px-2 py-0.5 rounded border border-sky-500/30">
                     AI MONITORED SECTOR
@@ -755,6 +856,41 @@ export const GisMapViewer = ({
                 </span>
               </div>
             </div>
+
+            {/* NITI Aayog / IIT Mandi Node Telemetry Card */}
+            {currentItem.isNitiNode && currentItem.rawNitiNode && (
+              <div className="p-3.5 bg-slate-950/90 rounded-2xl border border-cyan-500/30 space-y-2.5 shadow-inner mt-2">
+                <div className="flex items-center justify-between text-xs border-b border-slate-800 pb-2">
+                  <span className="text-cyan-400 font-bold uppercase tracking-wider flex items-center gap-1.5">
+                    <Radio className="w-3.5 h-3.5 animate-pulse" />
+                    Subsurface Telemetry (JETIR / NITI)
+                  </span>
+                  <span className="font-mono text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/30">
+                    Lead: {currentItem.rawNitiNode.leadTimeHours}
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-center text-[11px] font-mono">
+                  <div className="p-2 bg-slate-900/80 rounded-lg border border-slate-800">
+                    <span className="text-[9px] text-slate-400 uppercase block">1.5m Soil Moisture</span>
+                    <b className={`text-sm ${currentItem.rawNitiNode.moisture1_5m_pct >= 75 ? 'text-rose-400 font-bold' : (currentItem.rawNitiNode.moisture1_5m_pct >= 65 ? 'text-amber-400' : 'text-emerald-400')}`}>
+                      {currentItem.rawNitiNode.moisture1_5m_pct}%
+                    </b>
+                    <span className="text-[9px] text-slate-500 block">Failure limit: 75%</span>
+                  </div>
+                  <div className="p-2 bg-slate-900/80 rounded-lg border border-slate-800">
+                    <span className="text-[9px] text-slate-400 uppercase block">MEMS Tilt (Δθ)</span>
+                    <b className={`text-sm ${currentItem.rawNitiNode.tiltAngle_deg >= 3.2 ? 'text-rose-400 font-bold' : (currentItem.rawNitiNode.tiltAngle_deg >= 2.5 ? 'text-amber-400' : 'text-emerald-400')}`}>
+                      {currentItem.rawNitiNode.tiltAngle_deg}°
+                    </b>
+                    <span className="text-[9px] text-slate-500 block">Critical: 2.5° | Breach: 3.2°</span>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between text-[10px] font-mono text-slate-400 pt-1">
+                  <span>Solar: <b className="text-slate-200">{currentItem.rawNitiNode.battery_v}V</b></span>
+                  <span>LoRa: <b className="text-slate-200">{currentItem.rawNitiNode.rssi_dbm} dBm</b></span>
+                </div>
+              </div>
+            )}
             <span
               className="px-3 py-1 rounded-xl text-xs font-black shrink-0 uppercase tracking-wider shadow-sm font-mono"
               style={{

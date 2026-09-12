@@ -30,6 +30,9 @@ import { ReliefDeck } from './components/decks/ReliefDeck';
 import { BulletinsDeck } from './components/decks/BulletinsDeck';
 import { PublicSafetyDeck } from './components/decks/PublicSafetyDeck';
 import { RainLimitsDeck } from './components/decks/RainLimitsDeck';
+import { SubsurfaceGeomechanicsDeck } from './components/decks/SubsurfaceGeomechanicsDeck';
+import { MlBenchmarkDeck } from './components/decks/MlBenchmarkDeck';
+import { NitiSensorMeshDeck } from './components/decks/NitiSensorMeshDeck';
 
 // Modal & Aux imports
 import { OfficerLoginModal } from './components/modals/OfficerLoginModal';
@@ -45,7 +48,7 @@ import OfflineSyncBar from './components/OfflineSyncBar';
 import { 
   Route, CloudRain, ShieldAlert, BarChart3, ClipboardCheck, 
   FileText, Volume2, Code, Cpu, Radio, Building2, MessageSquare, 
-  Smartphone, HeartHandshake, Newspaper, LifeBuoy, Share2 
+  Smartphone, HeartHandshake, Newspaper, LifeBuoy, Share2, Layers 
 } from 'lucide-react';
 
 export default function App() {
@@ -179,17 +182,23 @@ export default function App() {
       } else if (e.key === '6') {
         setActiveDeck('aiEngine');
       } else if (e.key === '7') {
-        setActiveDeck('integrations');
+        setActiveDeck('mlBenchmark');
       } else if (e.key === '8') {
-        setActiveDeck('governance');
+        setActiveDeck('geomechanics');
       } else if (e.key === '9') {
-        setActiveDeck('rainLimits');
+        setActiveDeck('nitiSensors');
       } else if (e.key === '0') {
-        setActiveDeck('bulletins');
+        setActiveDeck('rainLimits');
       } else if (e.key === 'u' || e.key === 'U') {
         setActiveDeck('relief');
+      } else if (e.key === 'b' || e.key === 'B') {
+        setActiveDeck('bulletins');
       } else if (e.key === 'p' || e.key === 'P') {
         setActiveDeck('publicSafety');
+      } else if (e.key === 'g' || e.key === 'G') {
+        setActiveDeck('governance');
+      } else if (e.key === 'i' || e.key === 'I') {
+        setActiveDeck('integrations');
       } else if (e.key === 's' || e.key === 'S') {
         setIsSitRepModalOpen(prev => !prev);
       } else if (e.key === 'r' || e.key === 'R') {
@@ -377,32 +386,44 @@ export default function App() {
               </button>
 
               <button
-                onClick={() => setActiveDeck('integrations')}
+                onClick={() => setActiveDeck('mlBenchmark')}
                 className={`px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer ${
-                  activeDeck === 'integrations'
-                    ? 'bg-cyan-500 text-black shadow-lg shadow-cyan-500/20'
+                  activeDeck === 'mlBenchmark'
+                    ? 'bg-emerald-500 text-black shadow-lg shadow-emerald-500/20'
                     : 'bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800'
                 }`}
               >
-                <Radio className="w-3.5 h-3.5" />
-                <span>IMD & Satellite Feeds</span>
+                <BarChart3 className="w-3.5 h-3.5 text-emerald-400" />
+                <span>ML Benchmark (E3S)</span>
                 <span className="ml-1 px-1.5 py-0.2 rounded text-[10px] font-mono bg-black/30">7</span>
               </button>
 
               <button
-                onClick={() => setActiveDeck('governance')}
+                onClick={() => setActiveDeck('geomechanics')}
                 className={`px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer ${
-                  activeDeck === 'governance'
-                    ? 'bg-cyan-500 text-black shadow-lg shadow-cyan-500/20'
+                  activeDeck === 'geomechanics'
+                    ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20'
                     : 'bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800'
                 }`}
               >
-                <Building2 className="w-3.5 h-3.5" />
-                <span>Climate Governance</span>
+                <Layers className="w-3.5 h-3.5 text-amber-400" />
+                <span>Geomechanics (JETIR)</span>
                 <span className="ml-1 px-1.5 py-0.2 rounded text-[10px] font-mono bg-black/30">8</span>
               </button>
 
-              {/* NEW DECKS from nerdefender.vercel.app & sih-1-iota.vercel.app */}
+              <button
+                onClick={() => setActiveDeck('nitiSensors')}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer ${
+                  activeDeck === 'nitiSensors'
+                    ? 'bg-sky-500 text-black shadow-lg shadow-sky-500/20'
+                    : 'bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800'
+                }`}
+              >
+                <Radio className="w-3.5 h-3.5 text-sky-400 animate-pulse" />
+                <span>NITI Mesh (64)</span>
+                <span className="ml-1 px-1.5 py-0.2 rounded text-[10px] font-mono bg-black/30">9</span>
+              </button>
+
               <button
                 onClick={() => setActiveDeck('rainLimits')}
                 className={`px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer ${
@@ -412,8 +433,8 @@ export default function App() {
                 }`}
               >
                 <BarChart3 className="w-3.5 h-3.5" />
-                <span>Rain vs Limits (NER Defender)</span>
-                <span className="ml-1 px-1.5 py-0.2 rounded text-[10px] font-mono bg-black/30">9</span>
+                <span>Rain vs Limits</span>
+                <span className="ml-1 px-1.5 py-0.2 rounded text-[10px] font-mono bg-black/30">0</span>
               </button>
 
               <button
@@ -425,8 +446,8 @@ export default function App() {
                 }`}
               >
                 <Newspaper className="w-3.5 h-3.5" />
-                <span>News & BRO Bulletins</span>
-                <span className="ml-1 px-1.5 py-0.2 rounded text-[10px] font-mono bg-black/30">0</span>
+                <span>BRO Bulletins</span>
+                <span className="ml-1 px-1.5 py-0.2 rounded text-[10px] font-mono bg-black/30">B</span>
               </button>
 
               <button
@@ -438,7 +459,7 @@ export default function App() {
                 }`}
               >
                 <HeartHandshake className="w-3.5 h-3.5 text-rose-400" />
-                <span>Relief Fund & Aid</span>
+                <span>Relief Fund</span>
                 <span className="ml-1 px-1.5 py-0.2 rounded text-[10px] font-mono bg-black/30">U</span>
               </button>
 
@@ -451,8 +472,34 @@ export default function App() {
                 }`}
               >
                 <LifeBuoy className="w-3.5 h-3.5 text-emerald-400" />
-                <span>Public Safety & Helplines</span>
+                <span>Public Safety</span>
                 <span className="ml-1 px-1.5 py-0.2 rounded text-[10px] font-mono bg-black/30">P</span>
+              </button>
+
+              <button
+                onClick={() => setActiveDeck('governance')}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer ${
+                  activeDeck === 'governance'
+                    ? 'bg-cyan-500 text-black shadow-lg shadow-cyan-500/20'
+                    : 'bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800'
+                }`}
+              >
+                <Building2 className="w-3.5 h-3.5" />
+                <span>Governance</span>
+                <span className="ml-1 px-1.5 py-0.2 rounded text-[10px] font-mono bg-black/30">G</span>
+              </button>
+
+              <button
+                onClick={() => setActiveDeck('integrations')}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer ${
+                  activeDeck === 'integrations'
+                    ? 'bg-cyan-500 text-black shadow-lg shadow-cyan-500/20'
+                    : 'bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800'
+                }`}
+              >
+                <Radio className="w-3.5 h-3.5" />
+                <span>IMD & IoT Feeds</span>
+                <span className="ml-1 px-1.5 py-0.2 rounded text-[10px] font-mono bg-black/30">I</span>
               </button>
 
             </div>
@@ -520,6 +567,14 @@ export default function App() {
               />
             )}
             {activeDeck === 'aiEngine' && <AiEngineDeck lang={lang} />}
+            {activeDeck === 'mlBenchmark' && <MlBenchmarkDeck lang={lang} />}
+            {activeDeck === 'geomechanics' && <SubsurfaceGeomechanicsDeck lang={lang} />}
+            {activeDeck === 'nitiSensors' && (
+              <NitiSensorMeshDeck 
+                lang={lang} 
+                onOpenSirenModal={() => setIsSirenModalOpen(true)} 
+              />
+            )}
             {activeDeck === 'integrations' && <IntegrationsDeck lang={lang} />}
             {activeDeck === 'governance' && <GovernanceDeck lang={lang} />}
             {activeDeck === 'rainLimits' && <RainLimitsDeck lang={lang} />}
