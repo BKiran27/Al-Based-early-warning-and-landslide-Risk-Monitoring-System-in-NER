@@ -123,23 +123,27 @@ export const GisMapViewer = ({
     `;
   };
 
-  // Initialize Map
+  // Initialize Map safely
   useEffect(() => {
     if (!mapContainerRef.current) return;
 
-    if (mapInstanceRef.current) {
-      mapInstanceRef.current.remove();
-      mapInstanceRef.current = null;
-    }
+    try {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+      if (mapContainerRef.current._leaflet_id) {
+        delete mapContainerRef.current._leaflet_id;
+      }
 
-    const map = L.map(mapContainerRef.current, {
-      center: [25.8, 92.4],
-      zoom: 7,
-      minZoom: 6,
-      maxZoom: 15,
-      zoomControl: false,
-      attributionControl: false,
-    });
+      const map = L.map(mapContainerRef.current, {
+        center: [25.8, 92.4],
+        zoom: 7,
+        minZoom: 5,
+        maxZoom: 15,
+        zoomControl: false,
+        attributionControl: false,
+      });
 
     // Base tile layer group for Dark / Satellite switcher
     const baseTileGroup = L.layerGroup().addTo(map);
@@ -327,7 +331,13 @@ export const GisMapViewer = ({
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
       }
+      if (mapContainerRef.current && mapContainerRef.current._leaflet_id) {
+        delete mapContainerRef.current._leaflet_id;
+      }
     };
+    } catch (err) {
+      console.warn('Leaflet map initialization warning:', err);
+    }
   }, [hotspots]);
 
   // Update Citizen Reports Layer
@@ -538,13 +548,27 @@ export const GisMapViewer = ({
     setTimeout(() => setIsSirenActive(false), 4000);
   };
 
-  const currentItem = selectedItem || hotspots[0];
-  const itemColor = getRiskColor(currentItem.intensity);
+  const currentItem = selectedItem || hotspots?.[0] || {
+    id: 'NER-ML-01',
+    name: 'Cherrapunji Escarpment',
+    district: 'East Khasi Hills',
+    state: 'Meghalaya',
+    slope: 44.2,
+    rain48: 260.4,
+    soil: 94,
+    intensity: 0.94,
+    tier: 'SEVERE',
+    insar: -32.5,
+    suggestedAction: 'Pre-emptive evacuation along NH-206 corridor'
+  };
+  const itemColor = getRiskColor(currentItem.intensity || 0.7);
 
   // Physical Factor of Safety calculation formula
   // Fs = (c' + (gamma - m*gamma_w)*z*cos^2(beta)*tan(phi')) / (gamma*z*sin(beta)*cos(beta))
-  const slopeRad = (currentItem.slope * Math.PI) / 180;
-  const Fs = Math.max(0.68, Math.min(2.4, (1.85 / (Math.tan(slopeRad) * (1 + currentItem.soil / 120)))).toFixed(2));
+  const slopeVal = currentItem.slope || 42;
+  const soilVal = currentItem.soil || 85;
+  const slopeRad = (slopeVal * Math.PI) / 180;
+  const Fs = Math.max(0.68, Math.min(2.4, parseFloat((1.85 / (Math.tan(slopeRad) * (1 + soilVal / 120))).toFixed(2))));
 
   return (
     <div

@@ -106,7 +106,11 @@ export const Header = ({
         {/* Live IST Clock */}
         <div className="flex items-center space-x-1.5 text-xs bg-slate-950 border border-slate-800 px-2.5 py-2 rounded-xl text-slate-300 font-mono tabular-nums shadow-sm">
           <Clock className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-          <span className="text-[11px] font-semibold">{liveTime || 'LIVE IST'}</span>
+          <span className="text-[11px] font-semibold">
+            {liveTime instanceof Date 
+              ? `${liveTime.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })} IST`
+              : (typeof liveTime === 'string' ? liveTime : 'LIVE IST')}
+          </span>
         </div>
 
         {/* AI Engine Status Badge */}
