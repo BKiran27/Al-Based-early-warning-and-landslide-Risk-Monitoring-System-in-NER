@@ -12,6 +12,11 @@
 
 > **A scalable, AI/ML-powered, cloud-native geospatial intelligence platform for real-time landslide risk prediction, early warning dissemination, and disaster mitigation across the 8 North Eastern Region (NER) states of India.**
 
+### 🌐 Live Working Links
+- ⚡ **Direct Cloudflare Edge CDN**: [https://moves-transit-browsers-maui.trycloudflare.com](https://moves-transit-browsers-maui.trycloudflare.com)
+- 🚀 **Permanent GitHub Pages Demo**: [https://bkiran27.github.io/Al-Based-early-warning-and-landslide-Risk-Monitoring-System-in-NER/](https://bkiran27.github.io/Al-Based-early-warning-and-landslide-Risk-Monitoring-System-in-NER/)
+- 💻 **Localhost (On Machine)**: `http://localhost:3000/`
+
 ---
 
 ## 📌 Problem Overview & Mandate (SIH26001)
